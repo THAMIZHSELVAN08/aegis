@@ -1,0 +1,27 @@
+/* ─── AEGIS SOC Layout Styles ───────────────────────────────────────────── */
+.soc-layout {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    position: relative;
+    overflow-x: hidden;
+}
+
+.soc-main-content {
+    flex-grow: 1;
+    width: 100%;
+    min-width: 0;
+    padding: var(--space-6);
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 768px) {
+    .soc-main-content {
+        padding: var(--space-4);
+    }
+}

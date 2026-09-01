@@ -1,0 +1,18 @@
+@import "./styles/global.css";
+@import "./styles/layout.css";
+@import "./styles/sidebar.css";
+@import "./styles/cards.css";
+@import "./styles/charts.css";
+@import "./styles/table.css";
+@import "./styles/dashboard.css";
+
+body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+}
+
+#root {
+    min-height: 100vh;
+    display: flex;
+    background-color: var(--bg-app);
+}

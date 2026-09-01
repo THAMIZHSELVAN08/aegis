@@ -1,0 +1,90 @@
+/* ─── AEGIS SOC Table Styles ───────────────────────────────────────────── */
+.soc-table-container {
+    background-color: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.soc-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--bg-card);
+}
+
+.soc-table th {
+    background-color: var(--bg-app);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+
+.soc-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+}
+
+.soc-table tr {
+    background-color: var(--bg-card);
+    transition: background-color 0.15s ease;
+}
+
+.soc-table tr:hover {
+    background-color: var(--bg-hover) !important;
+}
+
+.soc-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Telemetry number column */
+.soc-table-mono {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+}
+
+/* Status Badges: Solid-but-muted */
+.soc-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    line-height: 1.2;
+}
+
+.soc-badge-normal {
+    background-color: var(--status-normal-bg);
+    color: var(--status-normal);
+    border: 1px solid var(--status-normal-border);
+}
+
+.soc-badge-warning {
+    background-color: var(--status-warning-bg);
+    color: var(--status-warning);
+    border: 1px solid var(--status-warning-border);
+}
+
+.soc-badge-critical {
+    background-color: var(--status-critical-bg);
+    color: var(--status-critical);
+    border: 1px solid var(--status-critical-border);
+}
+
+.soc-badge-accent {
+    background-color: var(--accent-muted);
+    color: var(--accent);
+    border: 1px solid rgba(34, 211, 238, 0.25);
+}

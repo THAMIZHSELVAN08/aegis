@@ -1,0 +1,160 @@
+/* ─── AEGIS SOC Card Styles ─────────────────────────────────────────────── */
+
+/* Universal SOC Card */
+.soc-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md); /* 12px */
+    padding: var(--space-6);         /* 24px */
+    box-shadow: var(--card-shadow);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.soc-card:hover {
+    border-color: var(--border-hover);
+}
+
+.soc-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+    transition: border-color 0.2s ease;
+}
+
+.soc-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    letter-spacing: -0.01em;
+}
+
+/* KPI Stat Cards (CodeFronts Dashboard Layouts Pattern) */
+.soc-kpi-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md); /* 12px */
+    padding: var(--space-6);         /* 24px */
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    min-height: 168px;
+    position: relative;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.soc-kpi-card:hover {
+    border-color: var(--border-hover);
+}
+
+.soc-kpi-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-3);
+}
+
+.soc-kpi-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.soc-kpi-value {
+    font-family: var(--font-mono);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: var(--space-1);
+    color: var(--text-primary);
+}
+
+.soc-kpi-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-4);
+}
+
+.soc-kpi-progress {
+    height: 3px;
+    border-radius: var(--radius-pill);
+    background-color: rgba(125, 125, 125, 0.12);
+    overflow: hidden;
+    margin-top: auto;
+}
+
+.soc-kpi-progress-bar {
+    height: 100%;
+    border-radius: var(--radius-pill);
+    transition: width 0.3s ease;
+}
+
+/* Status Alert Banner (CodeFronts Banners & Alerts: Dark/Light Card + Thin Left Status Border) */
+.soc-status-banner {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md); /* 12px */
+    padding: var(--space-5) var(--space-6); /* 20px 24px */
+    box-shadow: var(--card-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: var(--space-5);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.soc-status-banner.normal {
+    border-left: 3px solid var(--status-normal);
+}
+
+.soc-status-banner.warning {
+    border-left: 3px solid var(--status-warning);
+}
+
+.soc-status-banner.critical {
+    border-left: 3px solid var(--status-critical);
+}
+
+/* Notification Row Cards (CodeFronts Left-Border Alert Pattern) */
+.soc-notification-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md); /* 12px */
+    padding: var(--space-5) var(--space-6); /* 20px 24px */
+    box-shadow: var(--card-shadow);
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    position: relative;
+}
+
+.soc-notification-card:hover {
+    border-color: var(--border-hover);
+    background-color: var(--bg-hover);
+}
+
+.soc-notification-card.threat {
+    border-left: 3px solid var(--status-critical);
+}
+
+.soc-notification-card.warning {
+    border-left: 3px solid var(--status-warning);
+}
+
+.soc-notification-card.system {
+    border-left: 3px solid var(--accent);
+}

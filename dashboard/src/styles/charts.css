@@ -1,0 +1,38 @@
+/* ─── AEGIS SOC Chart Styles ───────────────────────────────────────────── */
+.soc-chart-container {
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+    position: relative;
+}
+
+.soc-chart-tooltip {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: var(--space-2) var(--space-3) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.78rem !important;
+}
+
+.soc-chart-tooltip .recharts-tooltip-label {
+    color: var(--accent) !important;
+    font-weight: 700 !important;
+    margin-bottom: 4px !important;
+}
+
+.recharts-cartesian-grid line {
+    stroke: rgba(255, 255, 255, 0.04) !important;
+}
+
+.recharts-cartesian-axis-line {
+    stroke: var(--border) !important;
+}
+
+.recharts-cartesian-axis-tick text {
+    fill: var(--text-muted) !important;
+    font-size: 10px !important;
+    font-family: var(--font-mono) !important;
+}

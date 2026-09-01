@@ -1,0 +1,251 @@
+/* ─── AEGIS SOC Design System CSS Custom Properties ─────────────────────── */
+:root {
+    /* Surface Backgrounds (Dark by default) */
+    --bg-app: #0A0E14;
+    --bg-card: #131820;
+    --bg-hover: #1A2029;
+    --bg-elevated: #1A2029;
+
+    /* Primary SOC Accent (Cyan) */
+    --accent: #22D3EE;
+    --accent-glow: rgba(34, 211, 238, 0.25);
+    --accent-muted: rgba(34, 211, 238, 0.12);
+    --accent-dark: #0891B2;
+
+    /* Status Colors */
+    --status-normal: #10B981;
+    --status-normal-bg: rgba(16, 185, 129, 0.12);
+    --status-normal-border: rgba(16, 185, 129, 0.25);
+
+    --status-warning: #F59E0B;
+    --status-warning-bg: rgba(245, 158, 11, 0.12);
+    --status-warning-border: rgba(245, 158, 11, 0.25);
+
+    --status-critical: #EF4444;
+    --status-critical-bg: rgba(239, 68, 68, 0.12);
+    --status-critical-border: rgba(239, 68, 68, 0.25);
+
+    /* Text Colors */
+    --text-primary: #E6E8EB;
+    --text-muted: #8B94A3;
+    --text-disabled: #555E6D;
+
+    /* Borders */
+    --border: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(255, 255, 255, 0.16);
+    --card-shadow: none;
+    --bg-grid-dot: rgba(255, 255, 255, 0.03);
+
+    /* Spacing Scale */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+
+    /* Border Radius Scale */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-pill: 999px;
+
+    /* Typography */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, Monaco, monospace;
+}
+
+/* ─── Light Mode Theme Token Overrides ─────────────────────────────────── */
+[data-theme='light'] {
+    /* Surface Backgrounds (Clean Light SaaS) */
+    --bg-app: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --bg-hover: #F1F5F9;
+    --bg-elevated: #F8FAFC;
+
+    /* Primary Accent (Crisp Deep Cyan / Blue) */
+    --accent: #0284C7;
+    --accent-glow: rgba(2, 132, 199, 0.20);
+    --accent-muted: rgba(2, 132, 199, 0.10);
+    --accent-dark: #0369A1;
+
+    /* Status Colors */
+    --status-normal: #059669;
+    --status-normal-bg: rgba(5, 150, 105, 0.10);
+    --status-normal-border: rgba(5, 150, 105, 0.22);
+
+    --status-warning: #D97706;
+    --status-warning-bg: rgba(217, 119, 6, 0.10);
+    --status-warning-border: rgba(217, 119, 6, 0.22);
+
+    --status-critical: #DC2626;
+    --status-critical-bg: rgba(220, 38, 38, 0.10);
+    --status-critical-border: rgba(220, 38, 38, 0.22);
+
+    /* Text Colors */
+    --text-primary: #0F172A;
+    --text-muted: #64748B;
+    --text-disabled: #94A3B8;
+
+    /* Borders */
+    --border: rgba(0, 0, 0, 0.08);
+    --border-hover: rgba(0, 0, 0, 0.16);
+    --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    --bg-grid-dot: rgba(0, 0, 0, 0.04);
+}
+
+/* ── Base reset & body ─────────────────────────────────────────────────── */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    min-height: 100vh;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root {
+    min-height: 100vh;
+    display: flex;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ── Typography & Monospace Utilities ──────────────────────────────────── */
+.font-mono {
+    font-family: var(--font-mono) !important;
+}
+
+.text-eyebrow {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.text-gradient-cyan {
+    background: linear-gradient(135deg, var(--text-primary) 20%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ── Ambient Background Pattern (Minimal SOC Grid) ─────────────────────── */
+.soc-bg-grid {
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(var(--bg-grid-dot) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.7;
+    transition: background-image 0.2s ease;
+}
+
+/* ── Status Pulse Dots ─────────────────────────────────────────────────── */
+@keyframes soc-pulse-green {
+    0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+    70%  { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+@keyframes soc-pulse-red {
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70%  { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--status-normal);
+    animation: soc-pulse-green 2s infinite;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.pulse-dot.danger {
+    background-color: var(--status-critical);
+    animation: soc-pulse-red 1.5s infinite;
+}
+
+.pulse-dot.warning {
+    background-color: var(--status-warning);
+}
+
+.accent-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* ── CodeFronts CSS Toggles & Switches Pattern ─────────────────────────── */
+.cf-theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-hover);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.cf-theme-toggle:hover {
+    border-color: var(--border-hover);
+    background-color: var(--bg-card);
+}
+
+.cf-toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background-color: var(--bg-app);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+}
+
+.cf-toggle-switch.active {
+    background-color: var(--accent-muted);
+    border-color: var(--accent);
+}
+
+.cf-toggle-knob {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bg-app);
+    font-size: 9px;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(0);
+}
+
+.cf-toggle-switch.active .cf-toggle-knob {
+    transform: translateX(16px);
+}

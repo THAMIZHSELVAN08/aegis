@@ -1,0 +1,99 @@
+/* ─── AEGIS SOC Sidebar Styles ──────────────────────────────────────────── */
+.soc-sidebar {
+    background-color: var(--bg-app);
+    border-right: 1px solid var(--border);
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, border-color 0.2s ease;
+    overflow-x: hidden;
+}
+
+.soc-sidebar-header {
+    min-height: 64px;
+    padding: 0 var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    transition: border-color 0.2s ease;
+}
+
+.soc-sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.soc-sidebar-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    background-color: var(--accent-muted);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.soc-nav-item {
+    position: relative;
+    border-radius: var(--radius-sm);
+    margin-bottom: 4px;
+    min-height: 40px;
+    padding: var(--space-2) var(--space-3);
+    color: var(--text-muted);
+    background-color: transparent;
+    border: 1px solid transparent;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.soc-nav-item:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+
+.soc-nav-item.active {
+    background-color: var(--accent-muted);
+    color: var(--accent);
+    border-color: rgba(34, 211, 238, 0.2);
+}
+
+[data-theme='light'] .soc-nav-item.active {
+    border-color: rgba(2, 132, 199, 0.25);
+}
+
+.soc-nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    background-color: var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.soc-nav-icon {
+    min-width: 32px;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s ease;
+}
+
+.soc-sidebar-footer {
+    padding: var(--space-3);
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    transition: border-color 0.2s ease;
+}

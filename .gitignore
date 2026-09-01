@@ -1,0 +1,31 @@
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Node / Frontend
+node_modules/
+dashboard/node_modules/
+dashboard/build/
+.pnp
+.pnp.js
+
+# IDE & Tooling
+.vscode/
+.qodo/
+.idea/
+.DS_Store
+
+# Logs & Environment
+*.log
+.env
+.env.local
