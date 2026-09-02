@@ -1,0 +1,17 @@
+{
+  "n_runs": 1000,
+  "ml_inference_only_ms": {
+    "median": 11.478,
+    "p95": 14.775,
+    "p99": 16.129,
+    "max": 28.861,
+    "mean": 12.014
+  },
+  "shap_explanation_ms": {
+    "median": 1.189,
+    "p95": 1.416,
+    "p99": 1.583,
+    "max": 4.863,
+    "mean": 1.199
+  }
+}

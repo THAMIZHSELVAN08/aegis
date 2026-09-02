@@ -12,6 +12,53 @@
     overflow: hidden;
 }
 
+/* ─── CodeFronts Blur-to-Sharp Animated Cards ─────────────────────────────── */
+@keyframes blurToSharp {
+    0% {
+        filter: blur(12px);
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    100% {
+        filter: blur(0);
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.blur-sharp-card {
+    animation: blurToSharp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-6);
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.blur-sharp-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    transition: left 0.75s ease;
+}
+
+.blur-sharp-card:hover::before {
+    left: 100%;
+}
+
+.blur-sharp-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-hover);
+    box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.4), 0 0 20px -5px var(--accent-muted);
+}
+
 .soc-card:hover {
     border-color: var(--border-hover);
 }

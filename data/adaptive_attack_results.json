@@ -1,0 +1,20 @@
+{
+  "config": {
+    "n_samples": 100,
+    "max_iterations": 30,
+    "perturbation_bound_inf": 0.1,
+    "step_size": 0.015,
+    "method": "zeroth_order_coordinate_descent_batched",
+    "reference": "Chen et al., ZOO: Zeroth Order Optimization, 2017"
+  },
+  "results": {
+    "detected_count": 100,
+    "evasion_count": 0,
+    "recall_adaptive_attacker": 1.0,
+    "recall_standard_attacker": null,
+    "detection_drop_pp": null,
+    "mean_final_attack_prob": 0.9974,
+    "evasion_rate_pct": 0.0
+  },
+  "interpretation": "Recall against an adaptive (white-box) attacker who knows the detection threshold and applies coordinate-descent perturbation bounded by ||delta||_inf <= BOUND. A drop in recall indicates robustness headroom; future work should explore adversarial training or gradient-free certified defences."
+}

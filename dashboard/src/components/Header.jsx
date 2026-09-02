@@ -1,191 +1,205 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-    Box, Typography, Avatar,
-    IconButton, Badge
-} from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
-import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
+import SecurityRoundedIcon from "@mui/icons-material/SecurityRounded";
 import WifiRoundedIcon from "@mui/icons-material/WifiRounded";
-import { useNotifications } from "../context/NotificationContext";
-import { BACKGROUND, ACCENT, STATUS, TEXT, RADIUS } from "../theme/theme";
+import AccessTimeRoundedIcon from "@mui/icons-material/AccessTimeRounded";
 
-/**
- * AEGIS SOC Header Component
- * CodeFronts SaaS App-Shell Header Pattern
- * Aligns live clock, grid integrity %, LIVE badge, notification bell, and avatar
- * into one compact right-aligned cluster with consistent spacing.
- */
-function Header({ gridHealth = 100, totalBuses = 14, healthyBuses = 14 }) {
-    const navigate = useNavigate();
-    const { unreadCount } = useNotifications();
-    const [currentTime, setCurrentTime] = useState(new Date());
+import { BACKGROUND, ACCENT, TEXT, RADIUS } from "../theme/theme";
+
+/* ── SVG Circular Progress Ring ──────────────────────────────────────────── */
+function RingChart({ value = 93, size = 78, color = "#10B981" }) {
+    const sw = 7;
+    const r  = (size - sw * 2) / 2;
+    const c  = 2 * Math.PI * r;
+    const offset = c - (Math.min(Math.max(value, 0), 100) / 100) * c;
+    return (
+        <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
+            <circle cx={size/2} cy={size/2} r={r} fill="none"
+                stroke={color.replace(")", ", 0.14)").replace("rgb", "rgba")}
+                strokeWidth={sw} opacity={0.25} />
+            <circle cx={size/2} cy={size/2} r={r} fill="none"
+                stroke={color} strokeWidth={sw} strokeLinecap="round"
+                strokeDasharray={c} strokeDashoffset={offset}
+                style={{ transition: "stroke-dashoffset 0.75s ease" }} />
+        </svg>
+    );
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+function Header({ gridHealth = 93, totalBuses = 14, healthyBuses = 13 }) {
+    const [now, setNow] = useState(new Date());
 
     useEffect(() => {
-        const t = setInterval(() => setCurrentTime(new Date()), 1000);
+        const t = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(t);
     }, []);
 
     const healthColor =
-        gridHealth > 80 ? STATUS.normal :
-        gridHealth > 60 ? STATUS.warning : STATUS.critical;
+        gridHealth > 80 ? "#10B981" :
+        gridHealth > 60 ? "#F59E0B" : "#EF4444";
+
+    const timeStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const dateStr = now.toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" });
 
     return (
-        <Box
-            sx={{
-                bgcolor: BACKGROUND.card,
-                border: `1px solid ${BACKGROUND.border}`,
-                borderRadius: `${RADIUS.md}px`,
-                boxShadow: "var(--card-shadow)",
-                px: 3,
-                py: 1.5,
-                mb: 3,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                minHeight: 64,
-                transition: "background-color 0.2s ease, border-color 0.2s ease",
-            }}
-        >
-            {/* ── Left: Platform Title ── */}
-            <Box>
-                <Typography className="text-eyebrow" sx={{ display: "block", mb: 0.2 }}>
-                    IEEE 14-BUS REAL-TIME PLATFORM
-                </Typography>
-                <Typography
-                    variant="h6"
-                    sx={{
-                        fontWeight: 700,
-                        fontSize: { xs: "1.05rem", sm: "1.2rem" },
-                        lineHeight: 1.15,
-                        color: TEXT.primary,
-                        letterSpacing: "-0.01em",
-                    }}
-                >
-                    Smart Grid SCADA Security Center
-                </Typography>
+        <Box sx={{
+            bgcolor: BACKGROUND.card,
+            border: `1px solid ${BACKGROUND.border}`,
+            borderRadius: `${RADIUS.md}px`,
+            boxShadow: "var(--card-shadow)",
+            px: { xs: 2.5, md: 3.5 },
+            py: { xs: 2, md: 2.5 },
+            mb: 3,
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 2, md: 3 },
+            minHeight: 112,
+            overflow: "hidden",
+            transition: "background-color 0.2s ease, border-color 0.2s ease",
+        }}>
+
+            {/* ── 1 · Logo + Title ───────────────────────────────────────── */}
+            <Box display="flex" alignItems="center" gap={2} flexShrink={0}>
+                {/* Shield badge */}
+                <Box sx={{
+                    width: 58, height: 58,
+                    borderRadius: `${RADIUS.md}px`,
+                    background: "linear-gradient(145deg,#1C3D6B 0%,#0D1F3C 100%)",
+                    display: { xs: "none", sm: "flex" },
+                    alignItems: "center", justifyContent: "center",
+                    border: "1px solid rgba(34,211,238,0.22)",
+                    flexShrink: 0,
+                    boxShadow: "0 4px 16px rgba(34,211,238,0.12)",
+                }}>
+                    <SecurityRoundedIcon sx={{ fontSize: 28, color: "#22D3EE" }} />
+                </Box>
+
+                {/* Text */}
+                <Box>
+                    <Typography sx={{
+                        fontSize: "0.63rem", fontWeight: 700,
+                        letterSpacing: "0.1em", textTransform: "uppercase",
+                        color: ACCENT, mb: 0.35,
+                    }}>
+                        IEEE 14-Bus Real-Time Platform
+                    </Typography>
+
+                    <Typography sx={{
+                        fontWeight: 800,
+                        fontSize: { xs: "1.15rem", sm: "1.45rem", md: "1.6rem" },
+                        lineHeight: 1.12, color: TEXT.primary,
+                        letterSpacing: "-0.02em",
+                    }}>
+                        Smart Grid SCADA<br />Security Center
+                    </Typography>
+
+                    <Typography sx={{
+                        fontSize: "0.73rem", color: TEXT.muted, fontWeight: 400,
+                        mt: 0.6, lineHeight: 1.45, maxWidth: 290,
+                        display: { xs: "none", lg: "block" },
+                    }}>
+                        Real-time monitoring, attack detection, and grid integrity
+                        management for a secure smart grid infrastructure.
+                    </Typography>
+                </Box>
             </Box>
 
-            {/* ── Right: Compact Aligned Status Cluster ── */}
-            <Box display="flex" alignItems="center" gap={1.5}>
-                {/* Grid Health Pill */}
-                <Box
-                    sx={{
-                        display: { xs: "none", sm: "flex" },
-                        alignItems: "center",
-                        gap: 1,
-                        px: 1.5,
-                        py: 0.6,
-                        borderRadius: `${RADIUS.sm}px`,
-                        bgcolor: BACKGROUND.app,
-                        border: `1px solid ${BACKGROUND.border}`,
-                        transition: "background-color 0.2s ease, border-color 0.2s ease",
-                    }}
-                >
-                    <Box sx={{ textAlign: "right" }}>
-                        <Typography sx={{ fontSize: "0.65rem", color: TEXT.muted, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", lineHeight: 1.1 }}>
-                            Grid Integrity
-                        </Typography>
-                        <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: healthColor, fontFamily: "var(--font-mono)", lineHeight: 1.15 }}>
-                            {gridHealth}% ({healthyBuses}/{totalBuses})
-                        </Typography>
+            {/* ── 2 · Center illustration ────────────────────────────────── */}
+            <Box
+    sx={{
+        flex: 1,
+        minWidth: 0,
+        height: "100%",
+        display: { xs: "none", xl: "flex" },
+        justifyContent: "center",
+        alignItems: "center",
+        px: 2,
+        overflow: "hidden",
+        position: "relative",
+    }}
+>
+    <Box
+        component="img"
+        src="/grid_illustration.jpg"
+        alt="Smart grid"
+        sx={{
+            width: "100%",
+            height: "150px",
+            objectFit: "cover",
+            objectPosition: "center 35%",
+            opacity: 0.82,
+            display: "block",
+        }}
+    />
+</Box>
+
+            {/* spacer on non-xl where illustration is hidden */}
+            <Box sx={{ flex: 1, display: { xs: "block", xl: "none" } }} />
+
+            {/* ── 3 · Grid Integrity + LIVE + Clock ─────────────────────── */}
+            <Box display="flex" alignItems="center" gap={2} flexShrink={0}
+                sx={{ display: { xs: "none", md: "flex" } }}>
+
+                {/* Ring */}
+                <Box sx={{ position: "relative", width: 78, height: 78, flexShrink: 0 }}>
+                    <RingChart value={gridHealth} size={78} color={healthColor} />
+                    <Box sx={{ position: "absolute", inset: 0, display: "flex",
+                        alignItems: "center", justifyContent: "center" }}>
+                        <SecurityRoundedIcon sx={{ fontSize: 20, color: healthColor }} />
                     </Box>
                 </Box>
 
-                {/* LIVE SCADA Badge */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.8,
-                        px: 1.2,
-                        py: 0.6,
-                        borderRadius: `${RADIUS.sm}px`,
-                        bgcolor: STATUS.normalBg,
-                        border: `1px solid ${STATUS.normalBorder}`,
-                        color: STATUS.normal,
-                        fontSize: "0.68rem",
-                        fontWeight: 700,
-                        letterSpacing: "0.06em",
-                        transition: "all 0.2s ease",
-                    }}
-                >
-                    <WifiRoundedIcon sx={{ fontSize: 13 }} />
-                    <span>LIVE</span>
+                {/* Stats column */}
+                <Box>
+                    <Typography sx={{
+                        fontSize: "0.61rem", fontWeight: 700,
+                        letterSpacing: "0.09em", textTransform: "uppercase",
+                        color: TEXT.muted, mb: 0.15,
+                    }}>
+                        Grid Integrity
+                    </Typography>
+                    <Typography sx={{
+                        fontSize: "2rem", fontWeight: 800,
+                        color: healthColor, lineHeight: 1, letterSpacing: "-0.03em",
+                    }}>
+                        {gridHealth}%
+                    </Typography>
+                    <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: healthColor, mb: 0.7 }}>
+                        ({healthyBuses}/{totalBuses})
+                    </Typography>
+
+                    {/* LIVE */}
+                    <Box sx={{
+                        display: "inline-flex", alignItems: "center", gap: 0.5,
+                        px: 1, py: 0.3,
+                        borderRadius: `${RADIUS.pill}px`,
+                        bgcolor: "rgba(16,185,129,0.10)",
+                        border: "1px solid rgba(16,185,129,0.28)",
+                        color: "#10B981",
+                        fontSize: "0.67rem", fontWeight: 700, letterSpacing: "0.07em",
+                        mb: 0.85,
+                    }}>
+                        <WifiRoundedIcon sx={{ fontSize: 10 }} />
+                        LIVE
+                    </Box>
+
+                    {/* Clock */}
+                    <Box display="flex" alignItems="center" gap={0.6}>
+                        <AccessTimeRoundedIcon sx={{ fontSize: 12, color: TEXT.muted }} />
+                        <Box>
+                            <Typography sx={{ fontSize: "0.79rem", fontWeight: 600, color: TEXT.primary, lineHeight: 1.15 }}>
+                                {timeStr}
+                            </Typography>
+                            <Typography sx={{ fontSize: "0.65rem", color: TEXT.muted, fontWeight: 400 }}>
+                                {dateStr}
+                            </Typography>
+                        </Box>
+                    </Box>
                 </Box>
-
-                {/* Monospace Live Clock */}
-                <Box
-                    sx={{
-                        display: { xs: "none", md: "block" },
-                        px: 1.5,
-                        py: 0.6,
-                        borderRadius: `${RADIUS.sm}px`,
-                        bgcolor: BACKGROUND.app,
-                        border: `1px solid ${BACKGROUND.border}`,
-                        fontFamily: "var(--font-mono)",
-                        fontWeight: 600,
-                        color: TEXT.primary,
-                        fontSize: "0.8rem",
-                        letterSpacing: "0.02em",
-                        transition: "background-color 0.2s ease, border-color 0.2s ease",
-                    }}
-                >
-                    {currentTime.toLocaleTimeString()}
-                </Box>
-
-                {/* Notifications Bell */}
-                <IconButton
-                    onClick={() => navigate("/notifications")}
-                    title="View Security Alerts"
-                    size="small"
-                    sx={{
-                        bgcolor: BACKGROUND.app,
-                        border: `1px solid ${BACKGROUND.border}`,
-                        color: TEXT.muted,
-                        borderRadius: `${RADIUS.sm}px`,
-                        p: "7px",
-                        transition: "all 0.15s ease",
-                        "&:hover": {
-                            color: ACCENT,
-                            borderColor: ACCENT,
-                            bgcolor: "var(--accent-muted)",
-                        },
-                    }}
-                >
-                    <Badge
-                        badgeContent={unreadCount}
-                        color="error"
-                        sx={{
-                            "& .MuiBadge-badge": {
-                                fontSize: "0.6rem",
-                                minWidth: 14,
-                                height: 14,
-                                bgcolor: STATUS.critical,
-                            },
-                        }}
-                    >
-                        <NotificationsNoneRoundedIcon sx={{ fontSize: 18 }} />
-                    </Badge>
-                </IconButton>
-
-                {/* User Operator Avatar */}
-                <Avatar
-                    sx={{
-                        bgcolor: BACKGROUND.app,
-                        color: TEXT.primary,
-                        width: 32,
-                        height: 32,
-                        fontSize: "0.75rem",
-                        fontWeight: 700,
-                        border: `1px solid ${BACKGROUND.border}`,
-                        borderRadius: `${RADIUS.sm}px`,
-                        transition: "background-color 0.2s ease, border-color 0.2s ease",
-                    }}
-                >
-                    SOC
-                </Avatar>
             </Box>
+
+
         </Box>
     );
 }

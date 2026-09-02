@@ -1,3 +1,7 @@
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+
 import pandapower as pp
 import pandapower.networks as nw
 import pandas as pd

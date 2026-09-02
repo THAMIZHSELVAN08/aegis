@@ -98,7 +98,7 @@ export const RADIUS = {
 
 export const FONTS = {
     sans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    mono: "'JetBrains Mono', 'SF Mono', Consolas, Monaco, monospace",
+    mono: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
 };
 
 // ─── Token accessor ───────────────────────────────────────────────────────────

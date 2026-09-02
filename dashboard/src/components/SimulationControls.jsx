@@ -15,7 +15,7 @@ import WarningIcon from "@mui/icons-material/Warning";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { BACKGROUND, ACCENT, STATUS, TEXT, RADIUS } from "../theme/theme";
 
-function SimulationControls({ running, onPause, onResume, onAttack, onReset }) {
+function SimulationControls({ running, onPause, onResume, onAttack, onReset, onOpenMetrics }) {
     const [attackType, setAttackType] = useState("voltage_manipulation");
 
     const handleInject = () => {
@@ -163,6 +163,27 @@ function SimulationControls({ running, onPause, onResume, onAttack, onReset }) {
                 >
                     Pause
                 </Button>
+
+                {/* Model Metrics & ROC Curve Modal Trigger */}
+                {onOpenMetrics && (
+                    <Button
+                        variant="outlined"
+                        onClick={onOpenMetrics}
+                        size="small"
+                        sx={{
+                            height: 38,
+                            fontSize: "0.8rem",
+                            borderRadius: `${RADIUS.sm}px`,
+                            borderColor: ACCENT,
+                            color: ACCENT,
+                            bgcolor: "transparent",
+                            fontWeight: 700,
+                            "&:hover": { bgcolor: "var(--accent-muted)", borderColor: ACCENT },
+                        }}
+                    >
+                        📊 Model Metrics & ROC
+                    </Button>
+                )}
 
                 {/* Reset System */}
                 <Button
