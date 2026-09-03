@@ -1,0 +1,35 @@
+{
+  "config": {
+    "alpha": 0.01,
+    "chi2_threshold": 48.2782,
+    "dof": 28,
+    "n_measurements": 42,
+    "n_state_vars": 14,
+    "sigma_vm": 0.01,
+    "sigma_p": 0.05,
+    "sigma_q": 0.05,
+    "split": "train_test_split(test_size=0.2, random_state=42, stratify=y)"
+  },
+  "results": {
+    "test_samples": 1400,
+    "tn": 0,
+    "fp": 1000,
+    "fn": 0,
+    "tp": 400,
+    "accuracy": 0.2857,
+    "recall_attack": 1.0,
+    "precision_attack": 0.2857,
+    "f1_attack": 0.4444,
+    "roc_auc": 0.5301
+  },
+  "comparison_vs_ml": {
+    "recall_chi2": 1.0,
+    "recall_ml": 0.9925,
+    "recall_lift_pp": -0.75,
+    "f1_chi2": 0.4444,
+    "f1_ml": 0.9962,
+    "auc_chi2": 0.5301,
+    "auc_ml": 0.9999
+  },
+  "interpretation": "The chi-square WLS bad-data detector is the industry-standard classical baseline. The ML ensemble (XGBoost + RandomForest) is evaluated on the identical test split for a fair comparison. The recall lift quantifies how much more of the attack class the ML approach captures relative to the classical detector."
+}

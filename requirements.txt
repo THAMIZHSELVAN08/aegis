@@ -15,4 +15,4 @@ xgboost==3.4.0
 paho-mqtt==2.1.0
 
 # Temporal model (Section 4.1) — install separately if not already present:
-# tensorflow>=2.15.0
+tensorflow>=2.15.0
