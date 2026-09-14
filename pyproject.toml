@@ -70,3 +70,6 @@ omit = [
 [tool.coverage.report]
 show_missing = true
 fail_under = 50
+
+[tool.vercel]
+entrypoint = "src.api_server:app"
