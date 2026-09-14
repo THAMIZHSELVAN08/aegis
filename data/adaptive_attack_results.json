@@ -1,24 +1,20 @@
 {
   "config": {
-    "n_samples": 100,
-    "max_iterations": 50,
+    "n_samples": 150,
+    "max_iterations": 200,
     "perturbation_bound_inf": 0.1,
-    "step_size": 0.015,
-    "threshold": 0.5,
-    "method": "zeroth_order_coordinate_descent_batched",
-    "formulation": "Evasion attack: start from real attack samples (label==1), search for minimal additional perturbation within L-inf budget that reduces ensemble attack probability below threshold.",
+    "step_size": 0.005,
+    "method": "zeroth_order_coordinate_descent",
     "reference": "Chen et al., ZOO: Zeroth Order Optimization, 2017"
   },
   "results": {
-    "n_initially_detected": 100,
-    "detected_count": 100,
+    "detected_count": 150,
     "evasion_count": 0,
     "recall_adaptive_attacker": 1.0,
-    "recall_standard_attacker": 0.9925,
-    "detection_drop_pp": -0.75,
-    "mean_final_attack_prob": 0.9569,
-    "min_final_attack_prob": 0.5804,
+    "recall_standard_attacker": null,
+    "detection_drop_pp": null,
+    "mean_final_attack_prob": 0.9978,
     "evasion_rate_pct": 0.0
   },
-  "interpretation": "Recall against a white-box adaptive attacker who starts from real attack samples and applies coordinate-descent perturbation bounded by ||delta||_inf <= BOUND. A non-zero evasion rate indicates the genuine robustness headroom of the ensemble; future work should explore adversarial training or certified defences."
+  "interpretation": "Recall against an adaptive (white-box) attacker who knows the detection threshold and applies coordinate-descent perturbation bounded by ||delta||_inf <= BOUND. A drop in recall indicates robustness headroom; future work should explore adversarial training or gradient-free certified defences."
 }
