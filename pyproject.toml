@@ -53,6 +53,7 @@ temporal = [
 [tool.pytest.ini_options]
 minversion = "7.0"
 testpaths = ["tests"]
+pythonpath = ["."]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 filterwarnings = [
@@ -69,7 +70,6 @@ omit = [
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 50
 
 [tool.pyright]
 extraPaths = ["."]

@@ -3,7 +3,6 @@ tests/test_inject_attacks.py — Tests for FDIA cyber-attack injection mechanism
 """
 
 import pytest
-import numpy as np
 import pandapower.networks as nw
 import pandapower as pp
 from src.inject_attacks import (

@@ -13,7 +13,6 @@ WebSocket events (flask-socketio):
 """
 
 import logging
-import os
 import random
 import re
 import sys
@@ -218,7 +217,10 @@ def get_shap_explanation(X_scaled: np.ndarray, prediction: int, top_n: int = 5) 
         return get_global_feature_importance(top_n=top_n)
 
 
-def get_live_reading(inject_attack: bool = False, attack_type: str = "voltage_manipulation") -> Tuple[Dict[str, float], str]:
+def get_live_reading(
+    inject_attack: bool = False,
+    attack_type: str = "voltage_manipulation"
+) -> Tuple[Dict[str, float], str]:
     """Simulate one grid reading, optionally with an injected attack."""
     factors = 1 + np.random.uniform(-0.15, 0.15, size=len(net.load))
     net.load["p_mw"] = base_loads_p * factors

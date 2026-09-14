@@ -2,7 +2,6 @@
 tests/test_api_server.py — Integration tests for Flask API server endpoints.
 """
 
-import json
 import pytest
 from src.api_server import app
 

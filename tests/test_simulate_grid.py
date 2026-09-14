@@ -2,7 +2,6 @@
 tests/test_simulate_grid.py — Unit and integration tests for IEEE 14-bus simulation.
 """
 
-import pytest
 import pandapower as pp
 import pandapower.networks as nw
 import pandas as pd
