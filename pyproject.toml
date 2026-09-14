@@ -71,5 +71,12 @@ omit = [
 show_missing = true
 fail_under = 50
 
+[tool.pyright]
+extraPaths = ["."]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
 [tool.vercel]
 entrypoint = "wsgi:app"
