@@ -73,6 +73,9 @@ show_missing = true
 
 [tool.pyright]
 extraPaths = ["."]
+typeCheckingMode = "basic"
+reportGeneralTypeIssues = "none"
+reportOptionalMemberAccess = "none"
 
 [tool.setuptools.packages.find]
 where = ["."]

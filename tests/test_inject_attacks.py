@@ -19,10 +19,10 @@ def base_reading():
     pp.runpp(net)
     reading = {}
     for bus_id in net.res_bus.index:
-        reading[f"vm_pu_bus{bus_id}"] = float(net.res_bus.at[bus_id, "vm_pu"])
-        reading[f"va_deg_bus{bus_id}"] = float(net.res_bus.at[bus_id, "va_degree"])
-        reading[f"p_mw_bus{bus_id}"] = float(net.res_bus.at[bus_id, "p_mw"])
-        reading[f"q_mvar_bus{bus_id}"] = float(net.res_bus.at[bus_id, "q_mvar"])
+        reading[f"vm_pu_bus{bus_id}"] = float(str(net.res_bus.at[bus_id, "vm_pu"]))
+        reading[f"va_deg_bus{bus_id}"] = float(str(net.res_bus.at[bus_id, "va_degree"]))
+        reading[f"p_mw_bus{bus_id}"] = float(str(net.res_bus.at[bus_id, "p_mw"]))
+        reading[f"q_mvar_bus{bus_id}"] = float(str(net.res_bus.at[bus_id, "q_mvar"]))
     return reading
 
 

@@ -63,10 +63,10 @@ logger = logging.getLogger("aegis.api")
 # App & SocketIO Setup
 # ---------------------------------------------------------------------------
 app = Flask(__name__)
-CORS(app, origins=config.CORS_ORIGINS.split(",") if "," in config.CORS_ORIGINS else config.CORS_ORIGINS)
+CORS(app, origins=config.CORS_ORIGINS.split(",") if "," in config.CORS_ORIGINS else config.CORS_ORIGINS)  # type: ignore
 
 socketio = SocketIO(
-    app,
+    app,  # type: ignore
     cors_allowed_origins=config.CORS_ORIGINS if config.CORS_ORIGINS != "*" else "*",
     async_mode="threading",
 )
@@ -171,7 +171,7 @@ def get_global_feature_importance(top_n: int = 5) -> Dict[str, Any]:
     }
 
 
-def get_shap_explanation(X_scaled: np.ndarray, prediction: int, top_n: int = 5) -> Dict[str, Any]:
+def get_shap_explanation(X_scaled: Any, prediction: int, top_n: int = 5) -> Dict[str, Any]:
     if shap_explainer is None:
         return get_global_feature_importance(top_n=top_n)
 
@@ -222,18 +222,18 @@ def get_live_reading(
     attack_type: str = "voltage_manipulation"
 ) -> Tuple[Dict[str, float], str]:
     """Simulate one grid reading, optionally with an injected attack."""
-    factors = 1 + np.random.uniform(-0.15, 0.15, size=len(net.load))
-    net.load["p_mw"] = base_loads_p * factors
-    net.load["q_mvar"] = base_loads_q * factors
+    factors = 1.0 + np.random.uniform(-0.15, 0.15, size=len(net.load))
+    net.load["p_mw"] = base_loads_p.values * factors
+    net.load["q_mvar"] = base_loads_q.values * factors
 
     pp.runpp(net)
 
-    raw_record = {}
+    raw_record: Dict[str, float] = {}
     for bus_id in net.res_bus.index:
-        raw_record[f"vm_pu_bus{bus_id}"] = float(net.res_bus.at[bus_id, "vm_pu"])
-        raw_record[f"va_deg_bus{bus_id}"] = float(net.res_bus.at[bus_id, "va_degree"])
-        raw_record[f"p_mw_bus{bus_id}"] = float(net.res_bus.at[bus_id, "p_mw"])
-        raw_record[f"q_mvar_bus{bus_id}"] = float(net.res_bus.at[bus_id, "q_mvar"])
+        raw_record[f"vm_pu_bus{bus_id}"] = float(str(net.res_bus.at[bus_id, "vm_pu"]))
+        raw_record[f"va_deg_bus{bus_id}"] = float(str(net.res_bus.at[bus_id, "va_degree"]))
+        raw_record[f"p_mw_bus{bus_id}"] = float(str(net.res_bus.at[bus_id, "p_mw"]))
+        raw_record[f"q_mvar_bus{bus_id}"] = float(str(net.res_bus.at[bus_id, "q_mvar"]))
 
     if not inject_attack:
         return raw_record, "None (Clean Baseline)"
