@@ -1,11 +1,11 @@
 """
-app.py — Root application entrypoint for AEGIS Flask Application.
+src/app.py — Vercel entrypoint in src directory.
 """
 
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SRC_DIR = PROJECT_ROOT / "src"
 
 for path in (PROJECT_ROOT, SRC_DIR):
@@ -19,6 +19,3 @@ except (ImportError, ModuleNotFoundError):
 
 app = _app
 handler = _app
-
-if __name__ == "__main__":
-    app.run()

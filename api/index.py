@@ -14,9 +14,9 @@ for path in (PROJECT_ROOT, SRC_DIR):
         sys.path.insert(0, str(path))
 
 try:
-    from src.api_server import app  # type: ignore
+    from src.api_server import app as _app  # type: ignore
 except (ImportError, ModuleNotFoundError):
-    from api_server import app  # type: ignore
+    from api_server import app as _app  # type: ignore
 
-# Vercel WSGI / Serverless handler
-handler = app
+app = _app
+handler = _app

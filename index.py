@@ -1,5 +1,5 @@
 """
-app.py — Root application entrypoint for AEGIS Flask Application.
+index.py — Root Serverless & WSGI Entrypoint for AEGIS on Vercel.
 """
 
 import sys

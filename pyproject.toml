@@ -79,4 +79,4 @@ where = ["."]
 include = ["src*"]
 
 [tool.vercel]
-entrypoint = "wsgi:app"
+entrypoint = "app.py"
