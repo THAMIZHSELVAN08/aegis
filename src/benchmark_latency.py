@@ -143,7 +143,7 @@ print("\n" + "=" * 60)
 print("LATENCY BENCHMARK RESULTS")
 print("=" * 60)
 inf = results["ml_inference_only_ms"]
-print(f"  ML Inference (scaling + XGBoost + RF + ensemble):")
+print("  ML Inference (scaling + XGBoost + RF + ensemble):")
 print(f"    Median : {inf['median']:>8.3f} ms")
 print(f"    p95    : {inf['p95']:>8.3f} ms")
 print(f"    p99    : {inf['p99']:>8.3f} ms")
@@ -151,7 +151,7 @@ print(f"    Max    : {inf['max']:>8.3f} ms")
 
 if has_shap:
     sh = results["shap_explanation_ms"]
-    print(f"\n  SHAP Explanation (per-prediction TreeExplainer):")
+    print("\n  SHAP Explanation (per-prediction TreeExplainer):")
     print(f"    Median : {sh['median']:>8.3f} ms")
     print(f"    p95    : {sh['p95']:>8.3f} ms")
     print(f"    p99    : {sh['p99']:>8.3f} ms")

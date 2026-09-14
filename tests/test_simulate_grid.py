@@ -33,7 +33,7 @@ def test_generate_normal_samples():
     net = nw.case14()
     n_samples = 5
     df = generate_normal_samples(net, n_samples=n_samples, load_variation=0.05)
-    
+
     assert isinstance(df, pd.DataFrame)
     assert len(df) <= n_samples
     assert "sample_id" in df.columns

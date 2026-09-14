@@ -40,7 +40,11 @@ class EmbeddedMQTTBroker:
             t.start()
             return t
         except Exception as err:
-            print(f"[Embedded MQTT Broker] Could not bind {self.host}:{self.port} ({err}). Local broker may already be running.", flush=True)
+            print(
+                f"[Embedded MQTT Broker] Could not bind {self.host}:{self.port} ({err}). "
+                "Local broker may already be running.",
+                flush=True,
+            )
             return None
 
     def _accept_loop(self):
@@ -97,9 +101,7 @@ class EmbeddedMQTTBroker:
                 elif packet_type == 3:  # PUBLISH
                     # Parse topic
                     topic_len = struct.unpack("!H", payload[:2])[0]
-                    topic = payload[2 : 2 + topic_len].decode("utf-8", errors="ignore")
-                    msg_body = payload[2 + topic_len :]
-
+                    topic = payload[2:2 + topic_len].decode("utf-8", errors="ignore")
                     self._broadcast(topic, payload)
 
                 elif packet_type == 8:  # SUBSCRIBE
@@ -107,8 +109,8 @@ class EmbeddedMQTTBroker:
                     idx = 2
                     sub_topics = []
                     while idx < len(payload):
-                        t_len = struct.unpack("!H", payload[idx : idx + 2])[0]
-                        t_name = payload[idx + 2 : idx + 2 + t_len].decode("utf-8", errors="ignore")
+                        t_len = struct.unpack("!H", payload[idx:idx + 2])[0]
+                        t_name = payload[idx + 2:idx + 2 + t_len].decode("utf-8", errors="ignore")
                         sub_topics.append(t_name)
                         idx += 2 + t_len + 1  # topic name + qos byte
 

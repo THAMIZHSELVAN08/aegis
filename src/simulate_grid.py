@@ -92,7 +92,10 @@ def run_n_minus_1_contingency(grid_net=None):
 
     is_overall_stable = len(critical_lines) == 0
     if is_overall_stable:
-        summary_msg = f"Grid remains stable under loss of any single transmission line (N-1 criteria passed across {len(contingency_results)} lines)."
+        summary_msg = (
+            "Grid remains stable under loss of any single transmission line "
+            f"(N-1 criteria passed across {len(contingency_results)} lines)."
+        )
     else:
         crit_names = ", ".join([c["line_name"] for c in critical_lines])
         summary_msg = f"Single point of failure detected! Grid vulnerable under loss of: {crit_names}."
