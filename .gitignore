@@ -29,3 +29,10 @@ dashboard/build/
 *.log
 .env
 .env.local
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+coverage/
+htmlcov/

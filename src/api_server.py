@@ -2,100 +2,108 @@
 api_server.py — AEGIS Flask API Backend
 
 Endpoints:
-  GET /api/live-reading       — Single synchronous reading + ML prediction
-  GET /api/model-metrics      — Saved evaluation metrics + metadata
+  GET /api/health               — System health, database connectivity, and model telemetry
+  GET /api/live-reading         — Single synchronous reading + ML prediction + SHAP
+  GET /api/model-metrics        — Saved evaluation metrics + metadata
   GET /api/contingency-analysis — N-1 contingency results
-  GET /api/history?limit=N    — Recent readings from SQLite audit trail
+  GET /api/history?limit=N      — Recent readings from SQLite audit trail
 
 WebSocket events (flask-socketio):
-  emit  'new_reading'         — Pushed every ~2 s from background thread
-
-Production hardening notes (see README.md → Known Limitations):
-  - CORS is currently restricted to CORS_ORIGIN env var (default: localhost:3000)
-  - Flask dev server is used; switch to gunicorn for production
-  - No authentication is implemented; stub API-key check is provided below
+  emit  'new_reading'           — Pushed every ~2 s from background thread or MQTT bridge
 """
 
+import logging
 import os
+import random
+import re
 import sys
+import threading
+import time
 import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-warnings.filterwarnings("ignore", category=UserWarning)
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
+import joblib
+import numpy as np
+import pandas as pd
+import pandapower as pp
+import pandapower.networks as nw
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
-import pandapower as pp
-import pandapower.networks as nw
-import numpy as np
-import pandas as pd
-import joblib
-import random
-import time
-import re
-import os
-import sys
-import threading
-from pathlib import Path
 
-# Ensure project root is in sys.path when running script directly
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+# Suppress noisy library warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
+# Ensure project root is in sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from src.config import config
+from src.db import get_db_stats, get_recent_readings, init_db, log_reading
+from src.inject_attacks import (
+    apply_load_redistribution,
+    apply_topology_replay,
+    apply_voltage_manipulation,
+)
+from src.simulate_grid import run_n_minus_1_contingency
 import shap
 
-try:
-    from src.inject_attacks import (
-        apply_voltage_manipulation,
-        apply_load_redistribution,
-        apply_topology_replay,
-    )
-    from src.simulate_grid import run_n_minus_1_contingency
-    from src.db import init_db, log_reading, get_recent_readings
-except ModuleNotFoundError:
-    from inject_attacks import (
-        apply_voltage_manipulation,
-        apply_load_redistribution,
-        apply_topology_replay,
-    )
-    from simulate_grid import run_n_minus_1_contingency
-    from db import init_db, log_reading, get_recent_readings
-
+# ---------------------------------------------------------------------------
+# Structured Logging Configuration
+# ---------------------------------------------------------------------------
+logging.basicConfig(
+    level=getattr(logging, config.LOG_LEVEL, logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S%z",
+)
+logger = logging.getLogger("aegis.api")
 
 # ---------------------------------------------------------------------------
-# App setup
+# App & SocketIO Setup
 # ---------------------------------------------------------------------------
-
 app = Flask(__name__)
+CORS(app, origins=config.CORS_ORIGINS.split(",") if "," in config.CORS_ORIGINS else config.CORS_ORIGINS)
 
-# CORS: restrict to the dashboard origin (or whatever is set in CORS_ORIGIN env var)
-_cors_origin = os.environ.get("CORS_ORIGIN", "http://localhost:3000")
-CORS(app, origins=[_cors_origin])
+socketio = SocketIO(
+    app,
+    cors_allowed_origins=config.CORS_ORIGINS if config.CORS_ORIGINS != "*" else "*",
+    async_mode="threading",
+)
 
-# Socket.IO — threading async mode avoids the websocket_wsgi ConnectionError
-# that occurs when eventlet/gevent/simple-websocket is not installed.
-socketio = SocketIO(app, cors_allowed_origins=_cors_origin, async_mode="threading")
-
-# Initialise SQLite DB (creates table if not present)
+# Initialize SQLite database
 init_db()
 
 # ---------------------------------------------------------------------------
-# Model + grid loading
+# Model & Grid Initialization
 # ---------------------------------------------------------------------------
+DATA_DIR = PROJECT_ROOT / "data"
 
-model = joblib.load("data/fdia_detector_model.pkl")
 try:
-    rf_model = joblib.load("data/rf_model.pkl")
+    model = joblib.load(DATA_DIR / "fdia_detector_model.pkl")
+except Exception as e:
+    logger.warning(f"Could not load fdia_detector_model.pkl: {e}")
+    model = None
+
+try:
+    rf_model = joblib.load(DATA_DIR / "rf_model.pkl")
 except Exception:
     rf_model = model
 
-scaler = joblib.load("data/scaler.pkl")
-feature_columns = joblib.load("data/feature_columns.pkl")
+try:
+    scaler = joblib.load(DATA_DIR / "scaler.pkl")
+    feature_columns = joblib.load(DATA_DIR / "feature_columns.pkl")
+except Exception as e:
+    logger.warning(f"Could not load scaler or feature_columns: {e}")
+    scaler = None
+    feature_columns = []
 
-# Built once at startup — TreeExplainer is reused for every request.
-shap_explainer = shap.TreeExplainer(model)
+# Initialize SHAP explainer
+shap_explainer = shap.TreeExplainer(model) if model is not None else None
 
+# Initialize PandaPower Grid Case 14
 net = nw.case14()
-
 base_loads_p = net.load["p_mw"].copy()
 base_loads_q = net.load["q_mvar"].copy()
 
@@ -106,37 +114,42 @@ FEATURE_LABELS = {
     "q_mvar": "Reactive Power (MVAR)",
 }
 
-# ---------------------------------------------------------------------------
-# Optional API-key stub (Section 1.3 — auth)
-# ---------------------------------------------------------------------------
-# To enable: set API_KEY env var before starting the server.
-# If not set, auth check is bypassed (development mode).
-_api_key = os.environ.get("API_KEY", "")
+VALID_ATTACK_TYPES = {
+    "random",
+    "voltage_manipulation",
+    "load_redistribution",
+    "topology_replay",
+}
 
 
+# ---------------------------------------------------------------------------
+# Security / Auth Helper
+# ---------------------------------------------------------------------------
 def _check_api_key():
     """Return a 401 response if API_KEY is configured and the request header is wrong."""
-    if not _api_key:
-        return None  # Auth disabled — development mode
+    if not config.API_KEY:
+        return None
     provided = request.headers.get("X-API-Key", "")
-    if provided != _api_key:
+    if provided != config.API_KEY:
+        logger.warning("Unauthorized request with invalid X-API-Key header")
         return jsonify({"error": "Unauthorized — missing or invalid X-API-Key header"}), 401
     return None
 
 
 # ---------------------------------------------------------------------------
-# Helper functions
+# Helper Functions
 # ---------------------------------------------------------------------------
-
-def humanize_feature_name(feature_name):
+def humanize_feature_name(feature_name: str) -> str:
     match = re.match(r"^(vm_pu|va_deg|p_mw|q_mvar)_bus(\d+)$", feature_name)
     if not match:
         return feature_name
     metric, bus = match.groups()
-    return f"Bus {bus} {FEATURE_LABELS[metric]}"
+    return f"Bus {bus} {FEATURE_LABELS.get(metric, metric)}"
 
 
-def get_global_feature_importance(top_n=5):
+def get_global_feature_importance(top_n: int = 5) -> Dict[str, Any]:
+    if model is None or not hasattr(model, "feature_importances_"):
+        return {"method": "none", "features": []}
     importances = model.feature_importances_
     ranked = sorted(
         zip(feature_columns, importances),
@@ -146,7 +159,7 @@ def get_global_feature_importance(top_n=5):
 
     return {
         "method": "global_feature_importance",
-        "label": "Global feature importance (gain-based, not per-prediction)",
+        "label": "Global feature importance (gain-based, fallback)",
         "features": [
             {
                 "feature": name,
@@ -159,9 +172,11 @@ def get_global_feature_importance(top_n=5):
     }
 
 
-def get_shap_explanation(X_scaled, prediction, top_n=5):
-    start = time.perf_counter()
+def get_shap_explanation(X_scaled: np.ndarray, prediction: int, top_n: int = 5) -> Dict[str, Any]:
+    if shap_explainer is None:
+        return get_global_feature_importance(top_n=top_n)
 
+    start = time.perf_counter()
     try:
         shap_values = shap_explainer.shap_values(X_scaled)
         elapsed_ms = (time.perf_counter() - start) * 1000
@@ -198,13 +213,12 @@ def get_shap_explanation(X_scaled, prediction, top_n=5):
             "latency_ms": round(elapsed_ms, 2),
             "features": features,
         }
-
     except Exception as exc:
-        print(f"SHAP explanation failed, using global fallback: {exc}")
+        logger.warning(f"SHAP explanation failed, using global fallback: {exc}")
         return get_global_feature_importance(top_n=top_n)
 
 
-def get_live_reading(inject_attack=False, attack_type="voltage_manipulation"):
+def get_live_reading(inject_attack: bool = False, attack_type: str = "voltage_manipulation") -> Tuple[Dict[str, float], str]:
     """Simulate one grid reading, optionally with an injected attack."""
     factors = 1 + np.random.uniform(-0.15, 0.15, size=len(net.load))
     net.load["p_mw"] = base_loads_p * factors
@@ -214,10 +228,10 @@ def get_live_reading(inject_attack=False, attack_type="voltage_manipulation"):
 
     raw_record = {}
     for bus_id in net.res_bus.index:
-        raw_record[f"vm_pu_bus{bus_id}"] = net.res_bus.at[bus_id, "vm_pu"]
-        raw_record[f"va_deg_bus{bus_id}"] = net.res_bus.at[bus_id, "va_degree"]
-        raw_record[f"p_mw_bus{bus_id}"] = net.res_bus.at[bus_id, "p_mw"]
-        raw_record[f"q_mvar_bus{bus_id}"] = net.res_bus.at[bus_id, "q_mvar"]
+        raw_record[f"vm_pu_bus{bus_id}"] = float(net.res_bus.at[bus_id, "vm_pu"])
+        raw_record[f"va_deg_bus{bus_id}"] = float(net.res_bus.at[bus_id, "va_degree"])
+        raw_record[f"p_mw_bus{bus_id}"] = float(net.res_bus.at[bus_id, "p_mw"])
+        raw_record[f"q_mvar_bus{bus_id}"] = float(net.res_bus.at[bus_id, "q_mvar"])
 
     if not inject_attack:
         return raw_record, "None (Clean Baseline)"
@@ -235,13 +249,8 @@ def get_live_reading(inject_attack=False, attack_type="voltage_manipulation"):
     return modified, attack_label
 
 
-def compute_one_reading(inject=None, attack_type="random"):
-    """
-    Core logic shared by the REST endpoint and the WebSocket push loop.
-
-    Returns a dict ready to be JSON-serialised and/or emitted.
-    Also logs the result to SQLite (excluding SHAP — measure that separately).
-    """
+def compute_one_reading(inject: Optional[bool] = None, attack_type: str = "random") -> Dict[str, Any]:
+    """Core simulation + detection logic."""
     if inject is None:
         inject = random.random() < 0.3
 
@@ -257,15 +266,21 @@ def compute_one_reading(inject=None, attack_type="random"):
 
     X = pd.DataFrame([reading])[feature_columns]
 
-    # --- Timed: scaling + ensemble inference (excluding SHAP) ---
     t0 = time.perf_counter()
-    X_scaled = scaler.transform(X)
+    X_scaled = scaler.transform(X) if scaler is not None else X.values
 
-    xgb_proba = model.predict_proba(X_scaled)[0]
-    rf_proba = rf_model.predict_proba(X_scaled)[0]
+    if model is not None and hasattr(model, "predict_proba"):
+        xgb_proba = model.predict_proba(X_scaled)[0]
+    else:
+        xgb_proba = np.array([0.9, 0.1])
+
+    if rf_model is not None and hasattr(rf_model, "predict_proba"):
+        rf_proba = rf_model.predict_proba(X_scaled)[0]
+    else:
+        rf_proba = xgb_proba
+
     ensemble_proba = (xgb_proba + rf_proba) / 2.0
     latency_ms = (time.perf_counter() - t0) * 1000
-    # -----------------------------------------------------------
 
     xgb_pred = int(np.argmax(xgb_proba))
     rf_pred = int(np.argmax(rf_proba))
@@ -294,7 +309,6 @@ def compute_one_reading(inject=None, attack_type="random"):
 
     explanation = get_shap_explanation(X_scaled, ensemble_pred, top_n=5)
 
-    # Persist to SQLite audit trail
     try:
         log_reading(
             prediction=prediction_label,
@@ -305,7 +319,7 @@ def compute_one_reading(inject=None, attack_type="random"):
             latency_ms=round(latency_ms, 3),
         )
     except Exception as db_err:
-        print(f"[db] log_reading failed: {db_err}")
+        logger.error(f"Failed to log reading to database: {db_err}")
 
     return {
         "reading": reading,
@@ -321,35 +335,31 @@ def compute_one_reading(inject=None, attack_type="random"):
 
 
 # ---------------------------------------------------------------------------
-# WebSocket background push loop
+# Background WebSocket Pusher
 # ---------------------------------------------------------------------------
-
 def _push_reading_loop():
-    """Daemon thread: connects to MQTT prediction stream or falls back to internal push loop."""
-    import paho.mqtt.client as mqtt
-
-    def on_prediction_msg(client, userdata, msg):
-        try:
-            import json
-            payload = json.loads(msg.payload.decode("utf-8"))
-            socketio.emit("new_reading", payload)
-        except Exception as err:
-            print(f"[ws] MQTT message parse error: {err}")
-
-    mqtt_broker = os.environ.get("MQTT_BROKER", "localhost")
-    mqtt_port = int(os.environ.get("MQTT_PORT", 1883))
-
+    """Background pusher with MQTT subscription and local fallback."""
     connected_to_mqtt = False
     try:
+        import paho.mqtt.client as mqtt
+
+        def on_prediction_msg(client, userdata, msg):
+            try:
+                import json
+                payload = json.loads(msg.payload.decode("utf-8"))
+                socketio.emit("new_reading", payload)
+            except Exception as err:
+                logger.error(f"MQTT message decode error: {err}")
+
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="web_dashboard_gateway")
         client.on_message = on_prediction_msg
-        client.connect(mqtt_broker, mqtt_port, 60)
+        client.connect(config.MQTT_BROKER_HOST, config.MQTT_BROKER_PORT, 60)
         client.subscribe("grid/alerts/predictions")
         client.loop_start()
         connected_to_mqtt = True
-        print(f"[ws] Connected to MQTT prediction stream on 'grid/alerts/predictions'", flush=True)
+        logger.info(f"Connected to MQTT broker at {config.MQTT_BROKER_HOST}:{config.MQTT_BROKER_PORT}")
     except Exception as exc:
-        print(f"[ws] MQTT broker connection not active ({exc}). Running local push loop fallback.", flush=True)
+        logger.info(f"MQTT broker not reachable ({exc}). Running local push loop fallback.")
 
     if not connected_to_mqtt:
         while True:
@@ -357,13 +367,39 @@ def _push_reading_loop():
                 payload = compute_one_reading()
                 socketio.emit("new_reading", payload)
             except Exception as exc:
-                print(f"[ws] push_reading_loop error: {exc}")
+                logger.error(f"Push loop error: {exc}")
             time.sleep(2)
 
 
 # ---------------------------------------------------------------------------
 # REST Endpoints
 # ---------------------------------------------------------------------------
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    """Health check endpoint exposing system status, DB stats, and model availability."""
+    db_stats = get_db_stats()
+    models_ready = model is not None and rf_model is not None and scaler is not None
+
+    status_code = 200 if models_ready else 503
+    return jsonify({
+        "status": "healthy" if models_ready else "degraded",
+        "version": "1.0.0",
+        "models": {
+            "xgboost_loaded": model is not None,
+            "random_forest_loaded": rf_model is not None,
+            "scaler_loaded": scaler is not None,
+            "shap_explainer_ready": shap_explainer is not None,
+            "feature_count": len(feature_columns),
+        },
+        "grid": {
+            "topology": "IEEE 14-bus",
+            "buses": len(net.bus),
+            "lines": len(net.line),
+            "generators": len(net.gen) + len(net.ext_grid),
+        },
+        "database": db_stats,
+    }), status_code
+
 
 @app.route("/api/live-reading", methods=["GET"])
 def live_reading():
@@ -374,13 +410,30 @@ def live_reading():
     inject_param = request.args.get("inject")
     attack_type = request.args.get("attack_type", "random")
 
-    if inject_param is not None:
-        inject = inject_param.lower() in ["true", "1", "yes"]
-    else:
-        inject = None  # compute_one_reading will decide randomly
+    # Input Validation
+    if attack_type not in VALID_ATTACK_TYPES:
+        return jsonify({
+            "error": f"Invalid attack_type '{attack_type}'. Must be one of: {sorted(list(VALID_ATTACK_TYPES))}"
+        }), 400
 
-    result = compute_one_reading(inject=inject, attack_type=attack_type)
-    return jsonify(result)
+    if inject_param is not None:
+        if inject_param.lower() in ["true", "1", "yes"]:
+            inject = True
+        elif inject_param.lower() in ["false", "0", "no"]:
+            inject = False
+        else:
+            return jsonify({
+                "error": f"Invalid inject parameter '{inject_param}'. Must be boolean (true/false/1/0)."
+            }), 400
+    else:
+        inject = None
+
+    try:
+        result = compute_one_reading(inject=inject, attack_type=attack_type)
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Error computing live reading: {e}")
+        return jsonify({"error": f"Failed to compute reading: {str(e)}"}), 500
 
 
 @app.route("/api/history", methods=["GET"])
@@ -389,7 +442,15 @@ def history():
     if auth_err:
         return auth_err
 
-    limit = min(int(request.args.get("limit", 100)), 500)  # cap at 500
+    limit_param = request.args.get("limit", "100")
+    try:
+        limit = int(limit_param)
+        if limit <= 0:
+            raise ValueError()
+        limit = min(limit, 500)
+    except ValueError:
+        return jsonify({"error": f"Invalid limit parameter '{limit_param}'. Must be a positive integer."}), 400
+
     return jsonify(get_recent_readings(limit))
 
 
@@ -399,15 +460,21 @@ def model_metrics():
     metrics = {}
     metadata = {}
     try:
-        with open("data/model_metrics.json", "r") as f:
-            metrics = json.load(f)
+        metrics_file = DATA_DIR / "model_metrics.json"
+        if metrics_file.exists():
+            with open(metrics_file, "r") as f:
+                metrics = json.load(f)
     except Exception as err:
+        logger.error(f"Failed to load metrics: {err}")
         metrics = {"error": f"Failed to load metrics: {err}"}
 
     try:
-        with open("data/model_metadata.json", "r") as f:
-            metadata = json.load(f)
+        metadata_file = DATA_DIR / "model_metadata.json"
+        if metadata_file.exists():
+            with open(metadata_file, "r") as f:
+                metadata = json.load(f)
     except Exception as err:
+        logger.error(f"Failed to load metadata: {err}")
         metadata = {"error": f"Failed to load metadata: {err}"}
 
     return jsonify({"metrics": metrics, "metadata": metadata})
@@ -415,23 +482,27 @@ def model_metrics():
 
 @app.route("/api/contingency-analysis", methods=["GET"])
 def contingency_analysis():
-    results = run_n_minus_1_contingency(net)
-    return jsonify(results)
+    try:
+        results = run_n_minus_1_contingency(net)
+        return jsonify(results)
+    except Exception as e:
+        logger.error(f"Contingency analysis error: {e}")
+        return jsonify({"error": f"Contingency analysis failed: {str(e)}"}), 500
 
 
 # ---------------------------------------------------------------------------
-# Entry point
+# Server Entry Point
 # ---------------------------------------------------------------------------
-
 if __name__ == "__main__":
-    # Start the WebSocket push loop as a background daemon thread
+    logger.info(f"Starting AEGIS API Server on {config.HOST}:{config.PORT}")
     push_thread = threading.Thread(target=_push_reading_loop, daemon=True)
     push_thread.start()
 
     socketio.run(
         app,
-        port=5000,
-        debug=True,
-        use_reloader=False,  # Disable reloader to prevent duplicate daemon threads
+        host=config.HOST,
+        port=config.PORT,
+        debug=config.DEBUG,
+        use_reloader=False,
         allow_unsafe_werkzeug=True,
     )
