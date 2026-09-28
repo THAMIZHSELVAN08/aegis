@@ -497,9 +497,12 @@ def contingency_analysis():
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     logger.info(f"Starting AEGIS API Server on {config.HOST}:{config.PORT}")
-    logger.info(f"REGISTERED ROUTES: {app.url_map}")
+
+    for rule in app.url_map.iter_rules():
+        logger.info(f"ROUTE: {rule}")
+
     push_thread = threading.Thread(target=_push_reading_loop, daemon=True)
-    
+
     socketio.run(
         app,
         host=config.HOST,
