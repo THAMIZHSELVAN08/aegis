@@ -502,7 +502,7 @@ if __name__ == "__main__":
         logger.info(f"ROUTE: {rule}")
 
     push_thread = threading.Thread(target=_push_reading_loop, daemon=True)
-
+    push_thread.start()
     socketio.run(
         app,
         host=config.HOST,
