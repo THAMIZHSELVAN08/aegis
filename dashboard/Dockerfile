@@ -11,7 +11,7 @@ WORKDIR /app
 
 # Install dependencies using cached layers
 COPY package*.json ./
-RUN npm ci
+RUN npm install --include=dev
 
 # Copy source assets and build production bundle
 COPY . .
